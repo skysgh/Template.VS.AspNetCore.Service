@@ -1,0 +1,72 @@
+name: Deploy to Environment
+
+# Triggers, on specific branches
+on:
+  push:
+    branches:
+      - main
+      - release
+      - develop
+env:
+  # env needs at least one line:
+  foo: bar
+  # DEFINE REPO CONSTANTS
+  NODE_VERSION: 20.11.0
+  ACTIONS_STEP_DEBUG: 'true'
+  ACTIONS_RUNNER_DEBUG: 'true'
+# Running on one runner:
+jobs:
+  call-workflow-passing-data:
+    # Invoke the callee either in same repo, or remote rempo
+    # ./.github/workflows/callee.yaml
+    uses: skysgh/resources.deployments.lib/.github/workflows/back-end-deployment.yaml@main
+    with:
+      # ======================================================================
+      # RELIANT ON SECRETS
+      # ======================================================================
+      # NP_AZURE_ENTRA_APP_CLIENT_CREDS
+      # NP_AZURE_SUBSCRIPTION_ID
+      # DB_ADMIN_NAME
+      # DB_ADMIN_PWD
+      # ======================================================================
+      # PROJECT PARAMETERS
+      # ======================================================================
+      # The project name, which informs naming of
+      # Azure resource groups and resource names
+      # definately changes per project.
+      # Note: it could be set here, or come from GitHUb repo vars:
+      PROJECT_NAME: "UNDEFINED"
+      PROJECT_SERVICE_NAME: "SRV"
+      PROJECT_DESCRIPTION: "Creates backend RG, WEB APP SERVER, SQL SERVER, etc."
+      PROJECT_ENVIRONMENT_ID: "BT"
+      # ======================================================================
+      # SRC PARAMETERS
+      # ======================================================================
+      SRC_REPO_GITHUB_USER_AND_REPO_NAME: ${{github.repository}}
+      # github.ref is the whole name ('refs/head/main')
+      # github.ref_name is the short name
+      SRC_REPO_BRANCH: ${{github.ref}}
+      SRC_REPO_BRANCH_NAME: ${{github.ref_name}}
+      SRC_REPO_SOURCE_ENTRY_FOLDER: "SOURCE"
+      # ======================================================================
+      # LIB PARAMETERS
+      # ======================================================================
+      # LIB_REPO_GITHUB_USER_AND_REPO_NAME: "skysgh/resources.deployments.lib"
+      # ======================================================================
+      # AZURE PARAMETERS
+      # ======================================================================
+      # see: https://gist.github.com/ausfestivus/04e55c7d80229069bf3bc75870630ec8
+      AZURE_LOCATION_ID: australiacentral
+      # AZURE_LOCATION_ID_ALT: southeastasia
+      # NET APP:
+      APP_NAME: "App.Host"
+      DOTNET_FRAMEWORK_VERSION: "8.0"
+    secrets:  # inherit
+      # AZURE Subcription & Access Params:
+      AZURE_SUBSCRIPTION_ID: ${{secrets.NP_AZURE_SUBSCRIPTION_ID}}
+      AZURE_ENTRA_APP_CLIENT_CREDS: ${{secrets.NP_AZURE_ENTRA_APP_CLIENT_CREDS}}
+      # AZURE REsource Params:
+      DB_ADMIN_NAME: ${{secrets.DB_ADMIN_NAME}}
+      DB_ADMIN_PWD: ${{secrets.DB_ADMIN_PWD}}
+      GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
